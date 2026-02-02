@@ -1,0 +1,54 @@
+services:
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_SQL_INIT_MODE=always
+      - SPRING_DATASOURCE_URL=${ONLINE_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${ONLINE_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${ONLINE_DATASOURCE_PASSWORD}
+    depends_on:
+      db:
+        condition: service_started
+    networks:
+      - library-network
+
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - library-network
+
+
+  db:
+    image: postgres:17
+    container_name: library-db
+    environment:
+      POSTGRES_DB: database_j7pd
+      POSTGRES_USER: database_j7pd_user
+      POSTGRES_PASSWORD: XiG78q1kapXqhFu4Of0pXvObvsaCndm3
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - library-network
+
+
+networks:
+  library-network:
+    driver: bridge
+
+volumes:
+  db-data:
