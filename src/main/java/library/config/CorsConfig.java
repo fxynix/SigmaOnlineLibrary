@@ -15,9 +15,9 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**")
-                        .allowedOrigins("https://online-library-ow4b.onrender.com",
+                        .allowedOrigins("https://online-library-backend-fz8e.onrender.com",
                                 "http://localhost:3000",
-                                "http://localhost:8080",
+                                "https://music-catalog-frontend.onrender.com",
                                 "http://localhost:80")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
