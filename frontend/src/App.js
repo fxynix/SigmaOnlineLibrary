@@ -99,20 +99,7 @@ const AppContent = () => {
               <Link to="/books" className="nav-link">Главное</Link>
               <Link to="/authors" className="nav-link">Авторы</Link>
               <Link to="/categories" className="nav-link">Жанры</Link>
-              {/* Измененная кнопка "Пользователи" */}
-              <span
-                  className="nav-link"
-                  style={{ cursor: 'pointer' }}
-                  onClick={() => {
-                    Modal.warning({
-                      title: 'В разработке',
-                      content: 'Раздел пользователей находится в разработке',
-                      okText: 'Понятно'
-                    });
-                  }}
-              >
-                  Пользователи
-                </span>
+              <Link to="/users" className="nav-link">Пользователи</Link>
             </div>
           </div>
 
@@ -121,24 +108,18 @@ const AppContent = () => {
                 <UserDropdown user={user} onLogout={handleLogout}/>
             ) : (
                 <>
-                  {/* Измененная кнопка "Зарегистрироваться" */}
                   <Button onClick={() => {
-                    Modal.warning({
-                      title: 'В разработке',
-                      content: 'Регистрация находится в разработке',
-                      okText: 'Понятно'
-                    });
-                  }} className="auth-button">
+                    setIsAuthModalVisible(true);
+                    setRegistration(true)
+                  }}
+                          className="auth-button">
                     Зарегистрироваться
                   </Button>
-                  {/* Измененная кнопка "Войти" */}
                   <Button onClick={() => {
-                    Modal.warning({
-                      title: 'В разработке',
-                      content: 'Авторизация находится в разработке',
-                      okText: 'Понятно'
-                    });
-                  }} className="auth-button">
+                    setIsAuthModalVisible(true);
+                    setRegistration(false)
+                  }}
+                          className="auth-button">
                     Войти
                   </Button>
                 </>
@@ -165,8 +146,7 @@ const AppContent = () => {
           </div>
         </Content>
 
-        {/* Удаляем или комментируем модальное окно авторизации, так как оно больше не нужно */}
-        {/* <Modal
+        <Modal
             title={registration ? "Регистрация" : "Авторизация"}
             open={isAuthModalVisible}
             onOk={handleAuth}
@@ -174,15 +154,15 @@ const AppContent = () => {
         >
           <Form form={authForm} layout="vertical">
             {(registration &&
-            <Form.Item
-                name="name"
-                label="Имя"
-                rules={[
-                  { required: true, message: 'Введите свое имя' },
-                ]}
-            >
-              <Input placeholder="Введите свое имя"/>
-            </Form.Item>
+                <Form.Item
+                    name="name"
+                    label="Имя"
+                    rules={[
+                      { required: true, message: 'Введите свое имя' },
+                    ]}
+                >
+                  <Input placeholder="Введите свое имя"/>
+                </Form.Item>
             )}
             <Form.Item
                 name="email"
@@ -198,14 +178,14 @@ const AppContent = () => {
                 name="password"
                 label="Пароль"
                 rules={[
-                    { required: true, message: 'Введите пароль' },
-                    { min: 8, message: 'Пароль должен быть длиной минимум 8 символов' },
+                  { required: true, message: 'Введите пароль' },
+                  { min: 8, message: 'Пароль должен быть длиной минимум 8 символов' },
                 ]}
             >
               <Input.Password prefix={<LockOutlined />} placeholder="Введите свой пароль"/>
             </Form.Item>
           </Form>
-        </Modal> */}
+        </Modal>
       </Layout>
   );
 };
@@ -220,13 +200,7 @@ const UserDropdown = ({ user, onLogout }) => {
                 key: 'profile',
                 icon: <InfoCircleOutlined />,
                 label: 'Профиль',
-                onClick: () => {
-                  Modal.warning({
-                    title: 'В разработке',
-                    content: 'Раздел профиля находится в разработке',
-                    okText: 'Понятно'
-                  });
-                }
+                onClick: () => navigate(`/users/${user.id}/profile`)
               },
               {
                 key: 'logout',
