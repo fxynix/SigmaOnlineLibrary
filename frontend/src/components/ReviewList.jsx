@@ -211,12 +211,12 @@ const ReviewList = () => {
                     <Form form={form} onFinish={handleSubmit} layout="vertical">
                         <Form.Item
                             name="rating"
-                            label="Оценка"
+                            label="Оценка(1-5)"
                             rules={[
                                 {required: true, message: 'Введите оценку!'},
                             ]}
                         >
-                            <InputNumber placeholder="Введите оценку" style={{ width: '100%' }} min={1} max={5}/>
+                            <InputNumber placeholder="Введите оценку" style={{ width: '100%' }} min={1} max={5} precision={0}/>
                         </Form.Item>
                         <Form.Item
                             name="comment"

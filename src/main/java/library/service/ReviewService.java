@@ -6,6 +6,7 @@ import library.cache.InMemoryCache;
 import library.dto.create.ReviewCreateDto;
 import library.dto.get.ReviewGetDto;
 import library.exception.AuthenticationException;
+import library.exception.DuplicateReviewException;
 import library.exception.NotFoundException;
 import library.mapper.ReviewMapper;
 import library.model.Book;
@@ -69,6 +70,12 @@ public class ReviewService {
                 .orElseThrow(()
                         -> new NotFoundException(USER_NOT_FOUND_MESSAGE + reviewDto.getUserId()));
 
+        boolean exists = reviewRepository.existsByBookIdAndUserId(bookId, user.getId());
+        if (exists) {
+            throw new DuplicateReviewException(
+                    "Пользователь уже оставил отзыв на эту книгу"
+            );
+        }
         Review review = ReviewMapper.fromDto(reviewDto);
 
         book.getReviews().add(review);

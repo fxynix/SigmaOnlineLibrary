@@ -35,6 +35,12 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(DuplicateReviewException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ResponseEntity<String> handleDuplicateReviewException(DuplicateReviewException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.CONFLICT);
+    }
+
     @ExceptionHandler(TooQuicklyException.class)
     @ResponseStatus(HttpStatus.TOO_EARLY)
     public ResponseEntity<String> handleTooQuicklyException(TooQuicklyException ex) {
