@@ -129,7 +129,11 @@ const ReviewList = () => {
                     content: <div style={{ whiteSpace: 'pre-line' }}>{errorMessages}</div>,
                     duration: 5
                 });
-            } else {
+            }
+            else if (error.response?.status === 409) {
+                message.error('Невозможно оставить более одного отзыва');
+            }
+            else {
                 message.error(error.response?.data?.message || 'Не удалось сохранить отзыв');
             }
         } finally {
