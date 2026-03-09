@@ -9,9 +9,9 @@ services:
     environment:
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - SPRING_SQL_INIT_MODE=always
-      - SPRING_DATASOURCE_URL=${ONLINE_DATASOURCE_URL}
-      - SPRING_DATASOURCE_USERNAME=${ONLINE_DATASOURCE_USERNAME}
-      - SPRING_DATASOURCE_PASSWORD=${ONLINE_DATASOURCE_PASSWORD}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://dpg-d6nepti4d50c73dgm6t0-a.frankfurt-postgres.render.com/database2_6fc6
+      - SPRING_DATASOURCE_USERNAME=database2_6fc6_user
+      - SPRING_DATASOURCE_PASSWORD=NOoDjGbnMqWHfxsFQ8DLHzvIxbz2Lawf
     depends_on:
       db:
         condition: service_started
