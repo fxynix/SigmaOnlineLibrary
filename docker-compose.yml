@@ -35,9 +35,9 @@ services:
     image: postgres:17
     container_name: library-db
     environment:
-      POSTGRES_DB: database_j7pd
-      POSTGRES_USER: database_j7pd_user
-      POSTGRES_PASSWORD: XiG78q1kapXqhFu4Of0pXvObvsaCndm3
+      POSTGRES_DB: database2_6fc6
+      POSTGRES_USER: database2_6fc6_user
+      POSTGRES_PASSWORD: NOoDjGbnMqWHfxsFQ8DLHzvIxbz2Lawf
     ports:
       - "5432:5432"
     volumes:
