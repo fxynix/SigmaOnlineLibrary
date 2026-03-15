@@ -18,6 +18,18 @@ import UserProfilePage from "./components/UserProfilePage";
 import logoImage from './assets/logo.png';
 import ReviewList from "./components/ReviewList";
 
+// Глобальный перехватчик для добавления JWT-токена ко всем запросам
+axios.interceptors.request.use(config => {
+  const userStr = localStorage.getItem('user');
+  if (userStr) {
+    const user = JSON.parse(userStr);
+    if (user && user.token) {
+      config.headers.Authorization = `Bearer ${user.token}`;
+    }
+  }
+  return config;
+});
+
 const { Header, Content } = Layout;
 
 const AppContent = () => {
@@ -27,39 +39,33 @@ const AppContent = () => {
   });
   const [isAuthModalVisible, setIsAuthModalVisible] = useState(false);
   const [authForm] = Form.useForm();
-  const [registration, setRegistration] = useState(false);
+  const[registration, setRegistration] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
   const handleAuth = async () => {
     try {
       const values = await authForm.validateFields();
+      let response;
 
       if(registration) {
-        const response = await axios.post(`${process.env.REACT_APP_API_URL}/users`, values);
-        const userData = {
-          id: response.data.userId,
-          name: response.data.name,
-          email: response.data.email,
-          token: response.data.token
-        };
-
-        setUser(userData);
-        localStorage.setItem('user', JSON.stringify(userData));
+        response = await axios.post(`${process.env.REACT_APP_API_URL}/users`, values);
       }
       else
       {
-        const response = await axios.post(`${process.env.REACT_APP_API_URL}/users/login`, values);
-        const userData = {
-          id: response.data.userId,
-          name: response.data.name,
-          email: response.data.email,
-          token: response.data.token
-        };
-
-        setUser(userData);
-        localStorage.setItem('user', JSON.stringify(userData));
+        response = await axios.post(`${process.env.REACT_APP_API_URL}/users/login`, values);
       }
+
+      const userData = {
+        id: response.data.userId,
+        name: response.data.name,
+        email: response.data.email,
+        role: response.data.role,
+        token: response.data.token
+      };
+
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
 
       setIsAuthModalVisible(false);
       message.success('Авторизация пройдена успешно');
@@ -80,8 +86,9 @@ const AppContent = () => {
   };
 
   const handleUserUpdate = (updatedUser) => {
-    setUser(updatedUser);
-    localStorage.setItem('user', JSON.stringify(updatedUser));
+    const freshUser = { ...user, ...updatedUser };
+    setUser(freshUser);
+    localStorage.setItem('user', JSON.stringify(freshUser));
   };
 
   return (
@@ -99,7 +106,7 @@ const AppContent = () => {
               <Link to="/books" className="nav-link">Главное</Link>
               <Link to="/authors" className="nav-link">Авторы</Link>
               <Link to="/categories" className="nav-link">Жанры</Link>
-              <Link to="/users" className="nav-link">Пользователи</Link>
+              {user?.role === 'ADMIN' && <Link to="/users" className="nav-link">Пользователи</Link>}
             </div>
           </div>
 
@@ -133,10 +140,12 @@ const AppContent = () => {
               <Route path="/authors" element={<AuthorList />} />
               <Route path="/categories" element={<CategoryList />} />
               <Route path="/books/:bookId/reviews" element={<ReviewList />} />
-              <Route
-                  path="/users"
-                  element={<UserList currentUser={user} onUserUpdate={handleUserUpdate} />}
-              />
+              {user?.role === 'ADMIN' && (
+                  <Route
+                      path="/users"
+                      element={<UserList currentUser={user} onUserUpdate={handleUserUpdate} />}
+                  />
+              )}
               <Route
                   path="/users/:id/profile"
                   element={<UserProfilePage user={user} onUserUpdate={handleUserUpdate} />}
@@ -195,7 +204,7 @@ const UserDropdown = ({ user, onLogout }) => {
   return (
       <Dropdown
           menu={{
-            items: [
+            items:[
               {
                 key: 'profile',
                 icon: <InfoCircleOutlined />,

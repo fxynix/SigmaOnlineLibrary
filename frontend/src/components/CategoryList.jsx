@@ -12,12 +12,15 @@ const CategoryList = () => {
     const [editingCategory, setEditingCategory] = useState(null);
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
-    const [submitting, setSubmitting] = useState(false);
+    const[submitting, setSubmitting] = useState(false);
+
+    const currentUser = JSON.parse(localStorage.getItem('user'));
+    const isAdmin = currentUser?.role === 'ADMIN';
 
     useEffect(() => {
         fetchCategories();
         fetchBooks();
-    }, []);
+    },[]);
 
     const fetchCategories = async () => {
         setLoading(true);
@@ -32,14 +35,10 @@ const CategoryList = () => {
     };
 
     const fetchBooks = async () => {
-        setLoading(true);
         try {
             const response = await axios.get(`${process.env.REACT_APP_API_URL}/books`);
             setBooks(response.data);
         } catch (error) {
-            message.error('Не удалось загрузить книги');
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -51,12 +50,12 @@ const CategoryList = () => {
                 name: category.name,
                 bookIds: books
                     .filter(book => category.books?.includes(book.name))
-                    .map(book => book.id) || []
+                    .map(book => book.id) ||[]
             });
         } else {
             form.setFieldsValue({
                 name: '',
-                bookIds: []
+                bookIds:[]
             });
         }
         setIsModalVisible(true);
@@ -67,7 +66,7 @@ const CategoryList = () => {
         try {
             const requestData = {
                 name: values.name,
-                ...(editingCategory && { bookIds: values.bookIds || [] })
+                ...(editingCategory && { bookIds: values.bookIds ||[] })
             };
 
             if (editingCategory) {
@@ -131,37 +130,41 @@ const CategoryList = () => {
         <Spin spinning={loading} tip="Loading...">
             <span className="name-text">Все жанры</span>
             <div className="container">
-                <div className="actions">
-                    <Button type="primary"
-                            icon={<PlusOutlined/>}
-                            onClick={() => showModal()}
-                            className="add-button">
-                        Добавить жанр
-                    </Button>
-                </div>
+                {isAdmin && (
+                    <div className="actions">
+                        <Button type="primary"
+                                icon={<PlusOutlined/>}
+                                onClick={() => showModal()}
+                                className="add-button">
+                            Добавить жанр
+                        </Button>
+                    </div>
+                )}
 
                 <Table dataSource={categories} rowKey="id">
                     <Column title="Название" dataIndex="name" key="name"/>
                     <Column title="Кол-во книг" dataIndex="count" key="count"/>
-                    <Column
-                        title="Действия"
-                        key="action"
-                        render={(_, category) => (
-                            <Space size="middle">
-                                <Button
-                                    type="link"
-                                    icon={<EditOutlined/>}
-                                    onClick={() => showModal(category)}
-                                />
-                                <Button
-                                    type="link"
-                                    icon={<DeleteOutlined/>}
-                                    onClick={() => handleDelete(category.id)}
-                                    danger
-                                />
-                            </Space>
-                        )}
-                    />
+                    {isAdmin && (
+                        <Column
+                            title="Действия"
+                            key="action"
+                            render={(_, category) => (
+                                <Space size="middle">
+                                    <Button
+                                        type="link"
+                                        icon={<EditOutlined/>}
+                                        onClick={() => showModal(category)}
+                                    />
+                                    <Button
+                                        type="link"
+                                        icon={<DeleteOutlined/>}
+                                        onClick={() => handleDelete(category.id)}
+                                        danger
+                                    />
+                                </Space>
+                            )}
+                        />
+                    )}
                 </Table>
 
                 <Modal

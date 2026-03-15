@@ -8,11 +8,11 @@ const { Column } = Table;
 
 const ReviewList = () => {
     const { bookId } = useParams();
-    const [reviews, setReviews] = useState([]);
+    const[reviews, setReviews] = useState([]);
     const [books, setBooks] = useState([]);
     const [users, setUsers] = useState([]);
     const [currentUser, setCurrentUser] = useState(null);
-    const [isModalVisible, setIsModalVisible] = useState(false);
+    const[isModalVisible, setIsModalVisible] = useState(false);
     const [editingReview, setEditingReview] = useState(null);
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
@@ -45,26 +45,18 @@ const ReviewList = () => {
     };
 
     const fetchBooks = async () => {
-        setLoading(true);
         try {
             const response = await axios.get(`${process.env.REACT_APP_API_URL}/books`);
             setBooks(response.data);
         } catch (error) {
-            message.error('Не удалось загрузить книги');
-        } finally {
-            setLoading(false);
         }
     };
 
     const fetchUsers = async () => {
-        setLoading(true);
         try {
             const response = await axios.get(`${process.env.REACT_APP_API_URL}/users`);
             setUsers(response.data);
         } catch (error) {
-            message.error('Не удалось загрузить пользователей');
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -131,7 +123,7 @@ const ReviewList = () => {
                 });
             }
             else if (error.response?.status === 409) {
-                message.error('Невозможно оставить более одного отзыва');
+                message.error('Невозможно оставить более одного отзыва, или вы пытаетесь изменить чужой');
             }
             else {
                 message.error(error.response?.data?.message || 'Не удалось сохранить отзыв');
@@ -160,6 +152,11 @@ const ReviewList = () => {
         });
     };
 
+    const canEdit = (review) => {
+        if (!currentUser) return false;
+        return currentUser.role === 'ADMIN' || currentUser.id === review.user?.id;
+    };
+
     return (
         <Spin spinning={loading} tip="Loading...">
             <span className="name-text">Все отзывы</span>
@@ -184,7 +181,7 @@ const ReviewList = () => {
                     <Column
                         title="Действия"
                         key="action"
-                        render={(_, review) => (
+                        render={(_, review) => canEdit(review) ? (
                             <Space size="middle">
                                 <Button
                                     type="link"
@@ -198,7 +195,7 @@ const ReviewList = () => {
                                     danger
                                 />
                             </Space>
-                        )}
+                        ) : null}
                     />
                 </Table>
 

@@ -13,12 +13,15 @@ const AuthorList = () => {
     const [editingAuthor, setEditingAuthor] = useState(null);
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
-    const [submitting, setSubmitting] = useState(false);
+    const[submitting, setSubmitting] = useState(false);
+
+    const currentUser = JSON.parse(localStorage.getItem('user'));
+    const isAdmin = currentUser?.role === 'ADMIN';
 
     useEffect(() => {
         fetchAuthors();
         fetchBooks();
-    }, []);
+    },[]);
 
     const fetchAuthors = async () => {
         setLoading(true);
@@ -33,14 +36,10 @@ const AuthorList = () => {
     };
 
     const fetchBooks = async () => {
-        setLoading(true);
         try {
             const response = await axios.get(`${process.env.REACT_APP_API_URL}/books`);
             setBooks(response.data);
         } catch (error) {
-            message.error('Не удалось загрузить книги');
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -53,12 +52,12 @@ const AuthorList = () => {
                 info: author.info,
                 bookIds: books
                     .filter(book => author.books?.includes(book.name))
-                    .map(book => book.id) || []
+                    .map(book => book.id) ||[]
             });
         } else {
             form.setFieldsValue({
                 name: '',
-                bookIds: []
+                bookIds:[]
             });
         }
         setIsModalVisible(true);
@@ -133,14 +132,16 @@ const AuthorList = () => {
         <Spin spinning={loading} tip="Loading...">
             <span className="name-text">Все авторы</span>
             <div className="container">
-                <div className="actions">
-                    <Button type="primary"
-                            icon={<PlusOutlined/>}
-                            onClick={() => showModal()}
-                            className="add-button">
-                        Добавить автора
-                    </Button>
-                </div>
+                {isAdmin && (
+                    <div className="actions">
+                        <Button type="primary"
+                                icon={<PlusOutlined/>}
+                                onClick={() => showModal()}
+                                className="add-button">
+                            Добавить автора
+                        </Button>
+                    </div>
+                )}
 
                 <Table dataSource={authors} rowKey="id">
                     <Column title="ФИО" dataIndex="name" key="name"/>
@@ -160,25 +161,27 @@ const AuthorList = () => {
                             ) : '-'
                         )}
                     />
-                    <Column
-                        title="Действия"
-                        key="action"
-                        render={(_, author) => (
-                            <Space size="middle">
-                                <Button
-                                    type="link"
-                                    icon={<EditOutlined/>}
-                                    onClick={() => showModal(author)}
-                                />
-                                <Button
-                                    type="link"
-                                    icon={<DeleteOutlined/>}
-                                    onClick={() => handleDelete(author.id)}
-                                    danger
-                                />
-                            </Space>
-                        )}
-                    />
+                    {isAdmin && (
+                        <Column
+                            title="Действия"
+                            key="action"
+                            render={(_, author) => (
+                                <Space size="middle">
+                                    <Button
+                                        type="link"
+                                        icon={<EditOutlined/>}
+                                        onClick={() => showModal(author)}
+                                    />
+                                    <Button
+                                        type="link"
+                                        icon={<DeleteOutlined/>}
+                                        onClick={() => handleDelete(author.id)}
+                                        danger
+                                    />
+                                </Space>
+                            )}
+                        />
+                    )}
                 </Table>
 
                 <Modal

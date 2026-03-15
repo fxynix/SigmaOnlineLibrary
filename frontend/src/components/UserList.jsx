@@ -7,13 +7,15 @@ import Column from "antd/es/table/Column";
 const UserList = ({ currentUser, onUserUpdate }) => {
     const [users, setUsers] = useState([]);
     const [isModalVisible, setIsModalVisible] = useState(false);
-    const [editingUser, setEditingUser] = useState(null);
+    const[editingUser, setEditingUser] = useState(null);
     const [form] = Form.useForm();
-    const [loading, setLoading] = useState(false);
+    const[loading, setLoading] = useState(false);
+
+    const isAdmin = currentUser?.role === 'ADMIN';
 
     useEffect(() => {
         fetchUsers();
-    }, []);
+    },[]);
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -116,25 +118,28 @@ const UserList = ({ currentUser, onUserUpdate }) => {
                 <Table dataSource={users} rowKey="id">
                     <Column title="Имя пользователя" dataIndex="name" key="name"/>
                     <Column title="Email" dataIndex="email" key="email"/>
-                    <Column
-                        title="Действия"
-                        key="action"
-                        render={(_, user) => (
-                            <Space size="middle">
-                                <Button
-                                    type="link"
-                                    icon={<EditOutlined/>}
-                                    onClick={() => showModal(user)}
-                                />
-                                <Button
-                                    type="link"
-                                    icon={<DeleteOutlined/>}
-                                    onClick={() => handleDelete(user.id)}
-                                    danger
-                                />
-                            </Space>
-                        )}
-                    />
+                    <Column title="Роль" dataIndex="role" key="role"/>
+                    {isAdmin && (
+                        <Column
+                            title="Действия"
+                            key="action"
+                            render={(_, user) => (
+                                <Space size="middle">
+                                    <Button
+                                        type="link"
+                                        icon={<EditOutlined/>}
+                                        onClick={() => showModal(user)}
+                                    />
+                                    <Button
+                                        type="link"
+                                        icon={<DeleteOutlined/>}
+                                        onClick={() => handleDelete(user.id)}
+                                        danger
+                                    />
+                                </Space>
+                            )}
+                        />
+                    )}
                 </Table>
 
                 <Modal
@@ -178,7 +183,7 @@ const UserList = ({ currentUser, onUserUpdate }) => {
                 </Modal>
             </div>
         </Spin>
-);
+    );
 };
 
 export default UserList;
