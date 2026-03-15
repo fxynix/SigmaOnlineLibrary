@@ -26,8 +26,6 @@ public class UserService {
     private final JwtUtil jwtUtil;
 
     private static final String USER_WITH_ID_NOT_FOUND_MESSAGE = "User is not found with id: ";
-    private static final String USER_WITH_EMAIL_NOT_FOUND_MESSAGE
-            = "User is not found with email: ";
     private static final String USER_WITH_EMAIL_EXISTS_MESSAGE
             = "User already exist with email: ";
     private static final String USER_WITH_NAME_EXISTS_MESSAGE = "User already exist with name: ";
@@ -107,9 +105,15 @@ public class UserService {
     }
 
     public AuthorizationResponse authenticate(AuthorizationRequest request) {
-        User user = userRepository.findByEmail(request.getEmail());
+        String login = request.getLogin();
+
+        User user = userRepository.findByEmail(login);
         if (user == null) {
-            throw new NotFoundException(USER_WITH_EMAIL_NOT_FOUND_MESSAGE + request.getEmail());
+            user = userRepository.findByName(login);
+        }
+
+        if (user == null) {
+            throw new NotFoundException("Пользователь не найден: " + login);
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {

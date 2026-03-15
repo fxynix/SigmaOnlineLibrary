@@ -18,7 +18,6 @@ import UserProfilePage from "./components/UserProfilePage";
 import logoImage from './assets/logo.png';
 import ReviewList from "./components/ReviewList";
 
-// Глобальный перехватчик для добавления JWT-токена ко всем запросам
 axios.interceptors.request.use(config => {
   const userStr = localStorage.getItem('user');
   if (userStr) {
@@ -116,6 +115,7 @@ const AppContent = () => {
             ) : (
                 <>
                   <Button onClick={() => {
+                    authForm.resetFields();
                     setIsAuthModalVisible(true);
                     setRegistration(true)
                   }}
@@ -123,6 +123,7 @@ const AppContent = () => {
                     Зарегистрироваться
                   </Button>
                   <Button onClick={() => {
+                    authForm.resetFields();
                     setIsAuthModalVisible(true);
                     setRegistration(false)
                   }}
@@ -162,27 +163,37 @@ const AppContent = () => {
             onCancel={() => setIsAuthModalVisible(false)}
         >
           <Form form={authForm} layout="vertical">
-            {(registration &&
+            {registration ? (
+              <>
                 <Form.Item
                     name="name"
                     label="Имя"
+                    rules={[{ required: true, message: 'Введите свое имя' }]}
+                >
+                  <Input prefix={<UserOutlined />} placeholder="Введите свое имя"/>
+                </Form.Item>
+                <Form.Item
+                    name="email"
+                    label="Email"
                     rules={[
-                      { required: true, message: 'Введите свое имя' },
+                      { required: true, message: 'Введите свой email' },
+                      { type: 'email', message: 'Введите свой настоящий email' }
                     ]}
                 >
-                  <Input placeholder="Введите свое имя"/>
+                  <Input prefix={<MailOutlined />} placeholder="Введите свой email" />
+                </Form.Item>
+              </>
+            ) : (
+                <Form.Item
+                    name="login"
+                    label="Email или Имя пользователя"
+                    rules={[
+                      { required: true, message: 'Введите email или имя' }
+                    ]}
+                >
+                  <Input prefix={<UserOutlined />} placeholder="Введите свой email или имя" />
                 </Form.Item>
             )}
-            <Form.Item
-                name="email"
-                label="Email"
-                rules={[
-                  { required: true, message: 'Введите свой email' },
-                  { type: 'email', message: 'Введите свой настоящий email' }
-                ]}
-            >
-              <Input prefix={<MailOutlined />} placeholder="Введите свой email" />
-            </Form.Item>
             <Form.Item
                 name="password"
                 label="Пароль"
