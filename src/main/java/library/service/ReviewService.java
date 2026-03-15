@@ -6,16 +6,20 @@ import library.cache.InMemoryCache;
 import library.dto.create.ReviewCreateDto;
 import library.dto.get.ReviewGetDto;
 import library.exception.AuthenticationException;
+import library.exception.ConflictException;
 import library.exception.DuplicateReviewException;
 import library.exception.NotFoundException;
 import library.mapper.ReviewMapper;
 import library.model.Book;
 import library.model.Review;
+import library.model.Role;
 import library.model.User;
 import library.repository.BookRepository;
 import library.repository.ReviewRepository;
 import library.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -67,14 +71,11 @@ public class ReviewService {
         }
 
         User user = userRepository.findById(reviewDto.getUserId())
-                .orElseThrow(()
-                        -> new NotFoundException(USER_NOT_FOUND_MESSAGE + reviewDto.getUserId()));
+                .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_MESSAGE + reviewDto.getUserId()));
 
         boolean exists = reviewRepository.existsByBookIdAndUserId(bookId, user.getId());
         if (exists) {
-            throw new DuplicateReviewException(
-                    "Пользователь уже оставил отзыв на эту книгу"
-            );
+            throw new DuplicateReviewException("Пользователь уже оставил отзыв на эту книгу");
         }
         Review review = ReviewMapper.fromDto(reviewDto);
 
@@ -90,27 +91,18 @@ public class ReviewService {
         return ReviewMapper.toDto(reviewRepository.save(review));
     }
 
-    @Transactional 
+    @Transactional
     public ReviewGetDto updateReview(Long id, Long bookId, ReviewCreateDto reviewDto) {
         Review review = reviewRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(REVIEW_NOT_FOUND_MESSAGE + id));
 
+        checkOwnershipOrAdmin(review);
+
         review.setComment(reviewDto.getComment());
         review.setRating(reviewDto.getRating());
 
-        if (reviewDto.getUserId() == null) {
-            throw new AuthenticationException("User is not logged in");
-        }
-
-        User user = userRepository.findById(reviewDto.getUserId())
-                .orElseThrow(()
-                        -> new NotFoundException(USER_NOT_FOUND_MESSAGE + reviewDto.getUserId()));
-
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new NotFoundException(BOOK_NOT_FOUND_MESSAGE + bookId));
-
-        user.getReviews().add(review);
-        review.setUser(user);
 
         recalculateBookRating(book);
 
@@ -122,15 +114,28 @@ public class ReviewService {
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new NotFoundException(BOOK_NOT_FOUND_MESSAGE + bookId));
 
-        if (!reviewRepository.existsById(id)) {
-            throw new NotFoundException(REVIEW_NOT_FOUND_MESSAGE + id);
-        }
+        Review review = reviewRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(REVIEW_NOT_FOUND_MESSAGE + id));
+
+        checkOwnershipOrAdmin(review);
 
         reviewRepository.deleteById(id);
 
         recalculateBookRating(book);
 
         cache.clear();
+    }
+
+    private void checkOwnershipOrAdmin(Review review) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) return;
+
+        String currentEmail = auth.getName();
+        User currentUser = userRepository.findByEmail(currentEmail);
+
+        if (currentUser != null && currentUser.getRole() != Role.ADMIN && !review.getUser().getId().equals(currentUser.getId())) {
+            throw new ConflictException("Вы можете изменять только свои отзывы");
+        }
     }
 
     private void recalculateBookRating(Book book) {

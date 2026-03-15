@@ -43,7 +43,7 @@ class AuthorServiceTest {
     private AuthorService authorService;
 
     private final Book bookTest = new Book(1L, "Test Book",
-            null, null, 0, null, 0, null, null);
+            null, null, 0, null, 0, null);
     private final Author authorTest = new Author(1L, "Test Author",
             "Info", Set.of(bookTest));
 
@@ -88,9 +88,9 @@ class AuthorServiceTest {
     @Test
     void createAuthor_WithValidData_CreatesAuthor() {
         Book book1 = new Book(1L, "Test Book 1", new HashSet<>(),
-                null, 0, null, 0, null, null);
+                null, 0, null, 0, null);
         Book book2 = new Book(2L, "Test Book 2", new HashSet<>(),
-                null, 0, null, 0, null, null);
+                null, 0, null, 0, null);
 
         AuthorCreateDto authorDto = new AuthorCreateDto("New Test Author",
                 "Info", List.of(book1.getId(), book2.getId()));
@@ -165,7 +165,7 @@ class AuthorServiceTest {
     @Test
     void updateAuthor_WithValidAuthor_UpdatesAuthor() {
         Book book = new Book(2L, "Different Test Book", new HashSet<>(),
-                null, 0, null, 0, null, null);
+                null, 0, null, 0, null);
 
         AuthorCreateDto authorDto = new AuthorCreateDto("Updated Author",
                 "Info", List.of(2L));

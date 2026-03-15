@@ -8,18 +8,22 @@ import library.dto.get.UserGetDto;
 import library.exception.NotFoundException;
 import library.model.Book;
 import library.model.Review;
+import library.model.Role;
 import library.model.User;
 import library.repository.UserRepository;
+import library.security.JwtUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -30,15 +34,21 @@ class UserServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private JwtUtil jwtUtil;
+
     @InjectMocks
     private UserService userService;
 
     private final Book bookTest = new Book(1L, "Test Book",
-            null, null, 100, null, 1000, null, null);
+            null, null, 100, null, 1000, null);
     private final Review reviewTest = new Review(1L, bookTest,
             null, 2, "Comment");
     private final User userTest = new User(1L, "Test User",
-            "Password", "email@gmail.com", List.of(reviewTest), Set.of(bookTest));
+            "Password", "email@gmail.com", Role.USER, List.of(reviewTest));
 
     @Test
     void getUserById_WhenUserExists_ShouldReturnUser() {
@@ -65,11 +75,12 @@ class UserServiceTest {
     void createUser_WithValidData_ShouldCreateUser() {
         UserCreateDto userDto = new UserCreateDto("New User", "da@gmail.com", "1111");
         User savedUser = new User(2L, userDto.getName(), userDto.getPassword(),
-                userDto.getEmail(), null, null);
+                userDto.getEmail(), Role.USER, null);
 
+        when(passwordEncoder.encode(anyString())).thenReturn("hashed_password");
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
-        UserGetDto result = userService.createUser(userDto);
+        library.dto.AuthorizationResponse result = userService.createUser(userDto);
 
         assertNotNull(result);
         assertEquals(userDto.getEmail(), result.getEmail());
@@ -82,6 +93,7 @@ class UserServiceTest {
         UserCreateDto userDto = new UserCreateDto("Updated User", "da@gmail.com", "1111");
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(userTest));
+        when(passwordEncoder.encode(anyString())).thenReturn("hashed_password");
         when(userRepository.save(any(User.class))).thenReturn(userTest);
 
         UserGetDto result = userService.updateUser(1L, userDto);
@@ -121,7 +133,7 @@ class UserServiceTest {
     @Test
     void getAllUsers_ReturnsList() {
         User anotherUserTest = new User(2L, "Another Test User", "Password",
-                "email@gmail.com", List.of(reviewTest), Set.of(bookTest));
+                "email@gmail.com", Role.USER, List.of(reviewTest));
 
         when(userRepository.findAll()).thenReturn(List.of(userTest, anotherUserTest));
 

@@ -2,6 +2,7 @@ package library.mapper;
 
 import library.dto.create.UserCreateDto;
 import library.dto.get.UserGetDto;
+import library.model.Role;
 import library.model.User;
 import lombok.experimental.UtilityClass;
 
@@ -13,6 +14,7 @@ public class UserMapper {
         dto.setId(user.getId());
         dto.setName(user.getName());
         dto.setEmail(user.getEmail());
+        dto.setRole(user.getRole().name());
 
         return dto;
     }
@@ -23,6 +25,7 @@ public class UserMapper {
         entity.setName(dto.getName());
         entity.setEmail(dto.getEmail());
         entity.setPassword(dto.getPassword());
+        entity.setRole(Role.USER); // Default role
 
         return entity;
     }

@@ -9,20 +9,23 @@ const { Column } = Table;
 const { Option } = Select;
 
 const BookList = () => {
-    const [books, setBooks] = useState([]);
+    const[books, setBooks] = useState([]);
     const [authors, setAuthors] = useState([]);
-    const [categories, setCategories] = useState([]);
+    const[categories, setCategories] = useState([]);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [editingBook, setEditingBook] = useState(null);
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
-    const [submitting, setSubmitting] = useState(false);
+    const[submitting, setSubmitting] = useState(false);
+
+    const currentUser = JSON.parse(localStorage.getItem('user'));
+    const isAdmin = currentUser?.role === 'ADMIN';
 
     useEffect(() => {
         fetchBooks();
         fetchAuthors();
         fetchCategories();
-    }, []);
+    },[]);
 
     const fetchBooks = async () => {
         setLoading(true);
@@ -30,8 +33,8 @@ const BookList = () => {
             const response = await axios.get(`${process.env.REACT_APP_API_URL}/books`);
             setBooks(response.data.map(book => ({
                 ...book,
-                authors: Array.isArray(book.authors) ? book.authors : [],
-                categories: Array.isArray(book.categories) ? book.categories : [],
+                authors: Array.isArray(book.authors) ? book.authors :[],
+                categories: Array.isArray(book.categories) ? book.categories :[],
             })));
         } catch (error) {
             message.error('Не удалось загрузить книги');
@@ -41,26 +44,20 @@ const BookList = () => {
     };
 
     const fetchAuthors = async () => {
-        setLoading(true);
         try {
             const response = await axios.get(`${process.env.REACT_APP_API_URL}/authors`);
             setAuthors(response.data);
         } catch (error) {
-            message.error('Не удалось загрузить авторов');
-        } finally {
-            setLoading(false);
+            // message.error('Не удалось загрузить авторов');
         }
     };
 
     const fetchCategories = async () => {
-        setLoading(true);
         try {
             const response = await axios.get(`${process.env.REACT_APP_API_URL}/categories`);
             setCategories(response.data);
         } catch (error) {
-            message.error('Не удалось загрузить жанры');
-        } finally {
-            setLoading(false);
+            // message.error('Не удалось загрузить жанры');
         }
     };
 
@@ -87,7 +84,7 @@ const BookList = () => {
             form.setFieldsValue({
                 name: '',
                 authorIds: [],
-                categoryIds: [],
+                categoryIds:[],
                 year: '',
                 pageAmount: '',
                 info: ''
@@ -167,15 +164,17 @@ const BookList = () => {
         <Spin spinning={loading} tip="Loading...">
             <span className="name-text">Все книги</span>
             <div className="container">
-                <div className="actions">
-                    <Button type="primary"
-                            icon={<PlusOutlined/>}
-                            onClick={() => showModal()}
-                            className="add-button"
-                    >
-                        Добавить книгу
-                    </Button>
-                </div>
+                {isAdmin && (
+                    <div className="actions">
+                        <Button type="primary"
+                                icon={<PlusOutlined/>}
+                                onClick={() => showModal()}
+                                className="add-button"
+                        >
+                            Добавить книгу
+                        </Button>
+                    </div>
+                )}
 
                 <Table dataSource={books} rowKey="id">
                     <Column title="Название" dataIndex="name" key="name"/>
@@ -183,7 +182,7 @@ const BookList = () => {
                         title="Авторы"
                         key="authors"
                         render={(_, book) => {
-                            const authors = Array.isArray(book.authors) ? book.authors : [];
+                            const authors = Array.isArray(book.authors) ? book.authors :[];
                             return authors.length > 0 ? (
                                 authors.map((author, index) => (
                                     <Tag key={index}>
@@ -197,7 +196,7 @@ const BookList = () => {
                         title="Жанры"
                         key="categories"
                         render={(_, book) => {
-                            const categories = Array.isArray(book.categories) ? book.categories : [];
+                            const categories = Array.isArray(book.categories) ? book.categories :[];
                             return categories.length > 0 ? (
                                 categories.map((category, index) => (
                                     <Tag key={index}>
@@ -225,25 +224,27 @@ const BookList = () => {
                             );
                         }}
                     />
-                    <Column
-                        title="Действия"
-                        key="action"
-                        render={(_, book) => (
-                            <Space size="middle">
-                                <Button
-                                    type="link"
-                                    icon={<EditOutlined/>}
-                                    onClick={() => showModal(book)}
-                                />
-                                <Button
-                                    type="link"
-                                    icon={<DeleteOutlined/>}
-                                    onClick={() => handleDelete(book.id)}
-                                    danger
-                                />
-                            </Space>
-                        )}
-                    />
+                    {isAdmin && (
+                        <Column
+                            title="Действия"
+                            key="action"
+                            render={(_, book) => (
+                                <Space size="middle">
+                                    <Button
+                                        type="link"
+                                        icon={<EditOutlined/>}
+                                        onClick={() => showModal(book)}
+                                    />
+                                    <Button
+                                        type="link"
+                                        icon={<DeleteOutlined/>}
+                                        onClick={() => handleDelete(book.id)}
+                                        danger
+                                    />
+                                </Space>
+                            )}
+                        />
+                    )}
                 </Table>
 
                 <Modal

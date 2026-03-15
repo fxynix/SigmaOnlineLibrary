@@ -50,13 +50,13 @@ class BookServiceTest {
     private final Category categoryTest = new Category(1L,
             "Test Category", null);
     private final Book bookTest = new Book(1L, "Test Book",
-            Set.of(authorTest), Set.of(categoryTest), 100, null, 1000, null, null);
+            Set.of(authorTest), Set.of(categoryTest), 100, null, 1000, null);
 
     @Test
     void getAllBooks_ReturnsAllBooks() {
         Book anotherBookTest = new Book(2L, "Another Test Book",
                 Set.of(authorTest), Set.of(categoryTest), 100,
-                null, 1000, null, null);
+                null, 1000, null);
 
         when(bookRepository.findAll()).thenReturn(List.of(bookTest, anotherBookTest));
 
@@ -258,7 +258,7 @@ class BookServiceTest {
         BookCreateDto bookDto = new BookCreateDto("New Book", Set.of(1L),
                 Set.of(1L), 20, 2021);
         Book savedBook = new Book(2L, "New Book", Set.of(authorTest),
-                Set.of(categoryTest), 20, null, 2021, null, null);
+                Set.of(categoryTest), 20, null, 2021, null);
 
         when(authorRepository.findById(1L)).thenReturn(Optional.of(authorTest));
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(categoryTest));
@@ -284,7 +284,7 @@ class BookServiceTest {
                 Collections.emptySet(), Collections.emptySet(), 20, 2021);
         Book savedBook = new Book(2L, "New Book",
                 Collections.emptySet(), Collections.emptySet(), 20,
-                null, 2021, null, null);
+                null, 2021, null);
 
         when(bookRepository.save(any(Book.class))).thenReturn(savedBook);
 
@@ -307,7 +307,7 @@ class BookServiceTest {
         BookCreateDto bookDto = new BookCreateDto("New Book",
                 null, null, 20, 2021);
         Book savedBook = new Book(2L, "New Book", Collections.emptySet(),
-                Collections.emptySet(), 20, null, 2021, null, null);
+                Collections.emptySet(), 20, null, 2021, null);
 
         when(bookRepository.save(any(Book.class))).thenReturn(savedBook);
 
