@@ -10,6 +10,7 @@ import java.util.List;
 import library.dto.AuthorizationRequest;
 import library.dto.AuthorizationResponse;
 import library.dto.create.UserCreateDto;
+import library.dto.create.UserRoleUpdateDto;
 import library.dto.get.UserGetDto;
 import library.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,8 +36,7 @@ public class UserController {
         this.userService = userService;
     }
 
-    @Operation(summary = "Get user by ID",
-            description = "Retrieves user by ID")
+    @Operation(summary = "Get user by ID", description = "Retrieves user by ID")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "User retrieved successfully"),
         @ApiResponse(responseCode = "404", description = "User not found")
@@ -55,8 +55,7 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
-    @Operation(summary = "Create user",
-            description = "Create new user")
+    @Operation(summary = "Create user", description = "Create new user")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "User created successfully"),
         @ApiResponse(responseCode = "400", description = "Incorrect entered data"),
@@ -69,8 +68,7 @@ public class UserController {
         return new ResponseEntity<>(userService.createUser(user), HttpStatus.CREATED);
     }
 
-    @Operation(summary = "Update user by ID",
-            description = "Update existing user")
+    @Operation(summary = "Update user by ID", description = "Update existing user")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "User updated successfully"),
         @ApiResponse(responseCode = "400", description = "Incorrect entered data"),
@@ -84,11 +82,25 @@ public class UserController {
         return ResponseEntity.ok(userService.updateUser(id, user));
     }
 
-    @Operation(summary = "Delete user by ID",
-            description = "Delete existing user")
+    @Operation(summary = "Update user role", description = "Change role of existing user")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Role updated successfully"),
+        @ApiResponse(responseCode = "400", description = "Incorrect entered data"),
+        @ApiResponse(responseCode = "404", description = "User not found"),
+        @ApiResponse(responseCode = "409", description = "Conflict - cannot modify own role")
+    })
+    @PutMapping("/{id}/role")
+    public ResponseEntity<UserGetDto> updateUserRole(
+            @Parameter(description = "User's ID", example = "2") @PathVariable Long id,
+            @Valid @RequestBody UserRoleUpdateDto roleDto) {
+        return ResponseEntity.ok(userService.updateUserRole(id, roleDto));
+    }
+
+    @Operation(summary = "Delete user by ID", description = "Delete existing user")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "204", description = "User deleted successfully"),
-        @ApiResponse(responseCode = "404", description = "User not found")
+        @ApiResponse(responseCode = "404", description = "User not found"),
+        @ApiResponse(responseCode = "409", description = "Conflict - cannot delete yourself")
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(

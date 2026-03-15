@@ -5,6 +5,7 @@ import java.util.Objects;
 import library.dto.AuthorizationRequest;
 import library.dto.AuthorizationResponse;
 import library.dto.create.UserCreateDto;
+import library.dto.create.UserRoleUpdateDto;
 import library.dto.get.UserGetDto;
 import library.exception.AuthenticationException;
 import library.exception.ConflictException;
@@ -16,6 +17,8 @@ import library.model.User;
 import library.repository.UserRepository;
 import library.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -26,8 +29,7 @@ public class UserService {
     private final JwtUtil jwtUtil;
 
     private static final String USER_WITH_ID_NOT_FOUND_MESSAGE = "User is not found with id: ";
-    private static final String USER_WITH_EMAIL_EXISTS_MESSAGE
-            = "User already exist with email: ";
+    private static final String USER_WITH_EMAIL_EXISTS_MESSAGE = "User already exist with email: ";
     private static final String USER_WITH_NAME_EXISTS_MESSAGE = "User already exist with name: ";
     private static final String PASSWORD_IS_NULL_MESSAGE = "Password required";
 
@@ -97,10 +99,34 @@ public class UserService {
         return UserMapper.toDto(userRepository.save(userEntity));
     }
 
-    public void deleteUser(Long id) {
-        if (!userRepository.existsById(id)) {
-            throw new NotFoundException(USER_WITH_ID_NOT_FOUND_MESSAGE + id);
+    public UserGetDto updateUserRole(Long id, UserRoleUpdateDto roleDto) {
+        User userEntity = userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(USER_WITH_ID_NOT_FOUND_MESSAGE + id));
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && userEntity.getEmail().equals(auth.getName())) {
+            throw new ConflictException("Вы не можете изменить роль самому себе");
         }
+
+        try {
+            Role newRole = Role.valueOf(roleDto.getRole().toUpperCase());
+            userEntity.setRole(newRole);
+        } catch (IllegalArgumentException e) {
+            throw new ConflictException("Недопустимая роль: " + roleDto.getRole());
+        }
+
+        return UserMapper.toDto(userRepository.save(userEntity));
+    }
+
+    public void deleteUser(Long id) {
+        User userEntity = userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(USER_WITH_ID_NOT_FOUND_MESSAGE + id));
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && userEntity.getEmail().equals(auth.getName())) {
+            throw new ConflictException("Вы не можете удалить собственный аккаунт");
+        }
+
         userRepository.deleteById(id);
     }
 

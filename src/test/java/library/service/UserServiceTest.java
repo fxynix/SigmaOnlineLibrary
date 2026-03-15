@@ -4,7 +4,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import library.dto.create.UserCreateDto;
+import library.dto.create.UserRoleUpdateDto;
 import library.dto.get.UserGetDto;
+import library.exception.ConflictException;
 import library.exception.NotFoundException;
 import library.model.Book;
 import library.model.Review;
@@ -12,11 +14,15 @@ import library.model.Role;
 import library.model.User;
 import library.repository.UserRepository;
 import library.security.JwtUtil;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -25,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -40,6 +47,12 @@ class UserServiceTest {
     @Mock
     private JwtUtil jwtUtil;
 
+    @Mock
+    private SecurityContext securityContext;
+
+    @Mock
+    private Authentication authentication;
+
     @InjectMocks
     private UserService userService;
 
@@ -49,6 +62,11 @@ class UserServiceTest {
             null, 2, "Comment");
     private final User userTest = new User(1L, "Test User",
             "Password", "email@gmail.com", Role.USER, List.of(reviewTest));
+
+    @BeforeEach
+    void setUp() {
+        SecurityContextHolder.setContext(securityContext);
+    }
 
     @Test
     void getUserById_WhenUserExists_ShouldReturnUser() {
@@ -114,8 +132,29 @@ class UserServiceTest {
     }
 
     @Test
-    void deleteUser_WhenUserExists_ShouldDeleteUser() {
-        when(userRepository.existsById(1L)).thenReturn(true);
+    void updateUserRole_WithValidRole_ShouldUpdateRole() {
+        UserRoleUpdateDto roleDto = new UserRoleUpdateDto();
+        roleDto.setRole("ADMIN");
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(userTest));
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getName()).thenReturn("other@gmail.com"); // Not self
+        when(userRepository.save(any(User.class))).thenReturn(userTest);
+
+        UserGetDto result = userService.updateUserRole(1L, roleDto);
+
+        assertNotNull(result);
+        assertEquals("ADMIN", result.getRole());
+        verify(userRepository).save(any(User.class));
+    }
+
+    @Test
+    void deleteUser_WhenUserExistsAndNotSelf_ShouldDeleteUser() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(userTest));
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getName()).thenReturn("other@gmail.com"); // Not self
         doNothing().when(userRepository).deleteById(1L);
 
         userService.deleteUser(1L);
@@ -124,8 +163,20 @@ class UserServiceTest {
     }
 
     @Test
+    void deleteUser_WhenTryingToDeleteSelf_ShouldThrowConflictException() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(userTest));
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getName()).thenReturn(userTest.getEmail()); // Self delete!
+
+        ConflictException exception = assertThrows(ConflictException.class, () -> userService.deleteUser(1L));
+        assertEquals("Вы не можете удалить собственный аккаунт", exception.getMessage());
+        verify(userRepository, never()).deleteById(anyLong());
+    }
+
+    @Test
     void deleteUser_WhenNotFound_ShouldThrowException() {
-        when(userRepository.existsById(20L)).thenReturn(false);
+        when(userRepository.findById(20L)).thenReturn(Optional.empty());
 
         assertThrows(NotFoundException.class, () -> userService.deleteUser(20L));
     }
