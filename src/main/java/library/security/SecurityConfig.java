@@ -38,7 +38,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/books/*/reviews").hasAnyRole("USER", "ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/books/*/reviews/*").hasAnyRole("USER", "ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/books/*/reviews/*").hasAnyRole("USER", "ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/users/*").hasAnyRole("USER", "ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/users/*/role").hasRole("ADMIN") // Строго только для ADMIN
+                .requestMatchers(HttpMethod.PUT, "/api/users/*").hasAnyRole("USER", "ADMIN") // Для обновления своего профиля
                 .requestMatchers(HttpMethod.POST, "/api/books/**", "/api/authors/**", "/api/categories/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/books/**", "/api/authors/**", "/api/categories/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/books/**", "/api/authors/**", "/api/categories/**", "/api/users/**").hasRole("ADMIN")

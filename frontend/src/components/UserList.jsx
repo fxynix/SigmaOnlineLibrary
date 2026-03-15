@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import {Table, Button, Space, Modal, Form, Input, message, Spin} from 'antd';
+import {Table, Button, Space, Modal, Form, Input, message, Spin, Select} from 'antd';
 import {EditOutlined, DeleteOutlined, UserOutlined, MailOutlined, LockOutlined} from '@ant-design/icons';
 import axios from 'axios';
 import Column from "antd/es/table/Column";
+
+const { Option } = Select;
 
 const UserList = ({ currentUser, onUserUpdate }) => {
     const [users, setUsers] = useState([]);
@@ -29,6 +31,16 @@ const UserList = ({ currentUser, onUserUpdate }) => {
         }
     };
 
+    const handleRoleChange = async (userId, newRole) => {
+        try {
+            await axios.put(`${process.env.REACT_APP_API_URL}/users/${userId}/role`, { role: newRole });
+            message.success('Роль успешно изменена');
+            fetchUsers();
+        } catch (error) {
+            message.error(error.response?.data || 'Не удалось изменить роль');
+        }
+    };
+
     const handleUpdate = async (values) => {
         try {
             const updateData = {
@@ -37,19 +49,19 @@ const UserList = ({ currentUser, onUserUpdate }) => {
                 password: values.password,
             };
 
-                const response = await axios.put(
-                    `${process.env.REACT_APP_API_URL}/users/${editingUser.id}`,
-                    updateData
-                );
+            const response = await axios.put(
+                `${process.env.REACT_APP_API_URL}/users/${editingUser.id}`,
+                updateData
+            );
 
-                fetchUsers();
+            fetchUsers();
 
-                if (currentUser && currentUser.id === editingUser.id) {
-                    onUserUpdate(response.data);
-                    message.success('Профиль пользователя изменен успешно');
-                } else {
-                    message.success('Пользователь отредактирован успешно');
-                }
+            if (currentUser && currentUser.id === editingUser.id) {
+                onUserUpdate(response.data);
+                message.success('Профиль пользователя изменен успешно');
+            } else {
+                message.success('Пользователь отредактирован успешно');
+            }
 
             setIsModalVisible(false);
         } catch (error) {
@@ -103,7 +115,7 @@ const UserList = ({ currentUser, onUserUpdate }) => {
                         message.success('Пользователь удален успешно');
                         fetchUsers();
                     } catch (error) {
-                        message.error('Не удалось удалить пользователя');
+                        message.error(error.response?.data || 'Не удалось удалить пользователя');
                     }
                 }
             }
@@ -118,7 +130,26 @@ const UserList = ({ currentUser, onUserUpdate }) => {
                 <Table dataSource={users} rowKey="id">
                     <Column title="Имя пользователя" dataIndex="name" key="name"/>
                     <Column title="Email" dataIndex="email" key="email"/>
-                    <Column title="Роль" dataIndex="role" key="role"/>
+                    <Column
+                        title="Роль"
+                        dataIndex="role"
+                        key="role"
+                        render={(role, user) => (
+                            isAdmin ? (
+                                <Select
+                                    value={role}
+                                    style={{ width: 120 }}
+                                    onChange={(newRole) => handleRoleChange(user.id, newRole)}
+                                    disabled={currentUser?.id === user.id}
+                                >
+                                    <Option value="USER">USER</Option>
+                                    <Option value="ADMIN">ADMIN</Option>
+                                </Select>
+                            ) : (
+                                role
+                            )
+                        )}
+                    />
                     {isAdmin && (
                         <Column
                             title="Действия"
@@ -135,6 +166,7 @@ const UserList = ({ currentUser, onUserUpdate }) => {
                                         icon={<DeleteOutlined/>}
                                         onClick={() => handleDelete(user.id)}
                                         danger
+                                        disabled={currentUser?.id === user.id}
                                     />
                                 </Space>
                             )}
