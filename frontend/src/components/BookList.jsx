@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import {Table, Button, Space, Modal, Form, Input, Select, Tag, message, Spin, InputNumber} from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Button, Space, Modal, Form, Input, Select, Tag, message, Spin, InputNumber, Row, Col, Card, Tooltip, Empty } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import axios from 'axios';
-import {Link} from "react-router-dom";
+import { Link } from "react-router-dom";
 import 'antd/dist/reset.css';
 
-const { Column } = Table;
 const { Option } = Select;
 
 const BookList = () => {
-    const[books, setBooks] = useState([]);
+    const [books, setBooks] = useState([]);
     const [authors, setAuthors] = useState([]);
-    const[categories, setCategories] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [editingBook, setEditingBook] = useState(null);
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const[submitting, setSubmitting] = useState(false);
+    const [searchText, setSearchText] = useState('');
 
     const currentUser = JSON.parse(localStorage.getItem('user'));
     const isAdmin = currentUser?.role === 'ADMIN';
@@ -33,7 +33,7 @@ const BookList = () => {
             const response = await axios.get(`${process.env.REACT_APP_API_URL}/books`);
             setBooks(response.data.map(book => ({
                 ...book,
-                authors: Array.isArray(book.authors) ? book.authors :[],
+                authors: Array.isArray(book.authors) ? book.authors : [],
                 categories: Array.isArray(book.categories) ? book.categories :[],
             })));
         } catch (error) {
@@ -101,7 +101,8 @@ const BookList = () => {
                 authorIds: values.authorIds,
                 categoryIds: values.categoryIds,
                 year: values.year,
-                pageAmount: values.pageAmount};
+                pageAmount: values.pageAmount
+            };
 
             if (editingBook) {
                 await axios.put(
@@ -154,98 +155,96 @@ const BookList = () => {
                     message.success('Книга успешна удалена');
                     fetchBooks();
                 } catch (error) {
-                    message.error('Не удалось удаить книгу');
+                    message.error('Не удалось удалить книгу');
                 }
             }
         });
     };
 
+    // Логика поиска
+    const filteredBooks = books.filter(book => {
+        const matchName = book.name.toLowerCase().includes(searchText.toLowerCase());
+        const matchAuthor = book.authors.some(author => {
+            const authorName = typeof author === 'string' ? author : author?.name;
+            return authorName?.toLowerCase().includes(searchText.toLowerCase());
+        });
+        return matchName || matchAuthor;
+    });
+
     return (
         <Spin spinning={loading} tip="Loading...">
             <span className="name-text">Все книги</span>
             <div className="container">
-                {isAdmin && (
-                    <div className="actions">
+                <div className="actions" style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+                    <Input.Search
+                        placeholder="Поиск по названию или автору..."
+                        allowClear
+                        enterButton={<SearchOutlined />}
+                        size="large"
+                        onChange={(e) => setSearchText(e.target.value)}
+                        style={{ maxWidth: 400 }}
+                    />
+                    {isAdmin && (
                         <Button type="primary"
-                                icon={<PlusOutlined/>}
+                                icon={<PlusOutlined />}
                                 onClick={() => showModal()}
                                 className="add-button"
+                                size="large"
                         >
                             Добавить книгу
                         </Button>
-                    </div>
-                )}
-
-                <Table dataSource={books} rowKey="id">
-                    <Column title="Название" dataIndex="name" key="name"/>
-                    <Column
-                        title="Авторы"
-                        key="authors"
-                        render={(_, book) => {
-                            const authors = Array.isArray(book.authors) ? book.authors :[];
-                            return authors.length > 0 ? (
-                                authors.map((author, index) => (
-                                    <Tag key={index}>
-                                        {typeof author === 'string' ? author : author?.name ?? '—'}
-                                    </Tag>
-                                ))
-                            ) : '-';
-                        }}
-                    />
-                    <Column
-                        title="Жанры"
-                        key="categories"
-                        render={(_, book) => {
-                            const categories = Array.isArray(book.categories) ? book.categories :[];
-                            return categories.length > 0 ? (
-                                categories.map((category, index) => (
-                                    <Tag key={index}>
-                                        {typeof category === 'string' ? category : category?.name ?? '—'}
-                                    </Tag>
-                                ))
-                            ) : '-';
-                        }}
-                    />
-                    <Column title="Год" dataIndex="year" key="year"
-                            render={(year) => (year ? year : '-')}
-                    />
-                    <Column title="Кол-во страниц" dataIndex="pageAmount" key="pageAmount"/>
-                    <Column title="Рейтинг" dataIndex="rating" key="rating"
-                            render={(value) => (value != null ? value.toFixed(1) : '0.0')}/>
-                    <Column
-                        title="Отзывы"
-                        key="reviews"
-                        render={(_, book) => {
-                            const count = Array.isArray(book.reviews) ? book.reviews.length : 0;
-                            return (
-                                <Link to={`/books/${book.id}/reviews`}>
-                                    {count}
-                                </Link>
-                            );
-                        }}
-                    />
-                    {isAdmin && (
-                        <Column
-                            title="Действия"
-                            key="action"
-                            render={(_, book) => (
-                                <Space size="middle">
-                                    <Button
-                                        type="link"
-                                        icon={<EditOutlined/>}
-                                        onClick={() => showModal(book)}
-                                    />
-                                    <Button
-                                        type="link"
-                                        icon={<DeleteOutlined/>}
-                                        onClick={() => handleDelete(book.id)}
-                                        danger
-                                    />
-                                </Space>
-                            )}
-                        />
                     )}
-                </Table>
+                </div>
+
+                {filteredBooks.length === 0 ? (
+                    <Empty description="Книги не найдены" style={{ marginTop: '50px' }} />
+                ) : (
+                    <Row gutter={[16, 16]}>
+                        {filteredBooks.map(book => (
+                            <Col xs={24} sm={12} md={8} lg={8} xl={6} key={book.id}>
+                                <Card
+                                    title={book.name}
+                                    hoverable
+                                    actions={isAdmin ?[
+                                        <Tooltip title="Редактировать книгу">
+                                            <EditOutlined key="edit" onClick={() => showModal(book)} />
+                                        </Tooltip>,
+                                        <Tooltip title="Удалить книгу">
+                                            <DeleteOutlined key="delete" style={{ color: 'red' }} onClick={() => handleDelete(book.id)} />
+                                        </Tooltip>
+                                    ] :[]}
+                                >
+                                    <div style={{ marginBottom: '8px' }}>
+                                        <strong>Авторы: </strong>
+                                        {book.authors.length > 0 ? (
+                                            book.authors.map((author, index) => (
+                                                <Tag key={index} style={{ marginBottom: '4px' }}>
+                                                    {typeof author === 'string' ? author : author?.name ?? '—'}
+                                                </Tag>
+                                            ))
+                                        ) : '-'}
+                                    </div>
+                                    <div style={{ marginBottom: '8px' }}>
+                                        <strong>Жанры: </strong>
+                                        {book.categories.length > 0 ? (
+                                            book.categories.map((category, index) => (
+                                                <Tag key={index} color="blue" style={{ marginBottom: '4px' }}>
+                                                    {typeof category === 'string' ? category : category?.name ?? '—'}
+                                                </Tag>
+                                            ))
+                                        ) : '-'}
+                                    </div>
+                                    <p><strong>Год:</strong> {book.year || '-'}</p>
+                                    <p><strong>Страниц:</strong> {book.pageAmount}</p>
+                                    <p><strong>Рейтинг:</strong> {book.rating != null ? book.rating.toFixed(1) : '0.0'} / 5.0</p>
+                                    <p>
+                                        <strong>Отзывы:</strong> <Link to={`/books/${book.id}/reviews`}>{book.reviews?.length || 0}</Link>
+                                    </p>
+                                </Card>
+                            </Col>
+                        ))}
+                    </Row>
+                )}
 
                 <Modal
                     title={editingBook ? "Редактировать книгу" : "Добавить книгу"}
@@ -263,10 +262,10 @@ const BookList = () => {
                             label="Название"
                             rules={[
                                 { required: true, message: 'Введите название книги' },
-                                {max: 255, message: 'Длина книги не должна превышать 255 символов'}
+                                { max: 255, message: 'Длина книги не должна превышать 255 символов' }
                             ]}
                         >
-                            <Input placeholder="Введите название книги"/>
+                            <Input placeholder="Введите название книги" />
                         </Form.Item>
 
                         <Form.Item
@@ -310,7 +309,7 @@ const BookList = () => {
                             name="year"
                             label="Год написания"
                         >
-                            <Input placeholder="Введите год написания книги"/>
+                            <Input placeholder="Введите год написания книги" />
                         </Form.Item>
                         <Form.Item
                             name="pageAmount"
@@ -319,7 +318,7 @@ const BookList = () => {
                                 { required: true, message: 'Введите кол-во страниц книги' },
                             ]}
                         >
-                            <InputNumber placeholder="Введите кол-во страниц книги" style={{ width: '100%' }} controls={false} min={1}/>
+                            <InputNumber placeholder="Введите кол-во страниц книги" style={{ width: '100%' }} controls={false} min={1} />
                         </Form.Item>
                     </Form>
                 </Modal>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {Table, Button, Space, Modal, Form, Input, Select, message, Spin, Tag} from 'antd';
+import { Table, Button, Space, Modal, Form, Input, Select, message, Spin, Tag, Tooltip } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import axios from 'axios';
 
@@ -69,7 +69,8 @@ const AuthorList = () => {
             const requestData = {
                 name: values.name,
                 info: values.info,
-                bookIds: values.bookIds};
+                bookIds: values.bookIds
+            };
 
             if (editingAuthor) {
                 await axios.put(
@@ -135,7 +136,7 @@ const AuthorList = () => {
                 {isAdmin && (
                     <div className="actions">
                         <Button type="primary"
-                                icon={<PlusOutlined/>}
+                                icon={<PlusOutlined />}
                                 onClick={() => showModal()}
                                 className="add-button">
                             Добавить автора
@@ -144,7 +145,7 @@ const AuthorList = () => {
                 )}
 
                 <Table dataSource={authors} rowKey="id">
-                    <Column title="ФИО" dataIndex="name" key="name"/>
+                    <Column title="ФИО" dataIndex="name" key="name" />
                     <Column title="Информация" dataIndex="info" key="info"
                             render={(text) => (text ? text : '-')}
                     />
@@ -167,17 +168,21 @@ const AuthorList = () => {
                             key="action"
                             render={(_, author) => (
                                 <Space size="middle">
-                                    <Button
-                                        type="link"
-                                        icon={<EditOutlined/>}
-                                        onClick={() => showModal(author)}
-                                    />
-                                    <Button
-                                        type="link"
-                                        icon={<DeleteOutlined/>}
-                                        onClick={() => handleDelete(author.id)}
-                                        danger
-                                    />
+                                    <Tooltip title="Редактировать автора">
+                                        <Button
+                                            type="link"
+                                            icon={<EditOutlined />}
+                                            onClick={() => showModal(author)}
+                                        />
+                                    </Tooltip>
+                                    <Tooltip title="Удалить автора">
+                                        <Button
+                                            type="link"
+                                            icon={<DeleteOutlined />}
+                                            onClick={() => handleDelete(author.id)}
+                                            danger
+                                        />
+                                    </Tooltip>
                                 </Space>
                             )}
                         />
@@ -200,17 +205,17 @@ const AuthorList = () => {
                             label="ФИО"
                             rules={[
                                 { required: true, message: 'Введите имя автора' },
-                                { max: 255, message: 'Имя автора не должно быть длинее 255 символов'},
-                                { min: 2, message: 'Имя автора не должна быть короче 2 символов'}
+                                { max: 255, message: 'Имя автора не должно быть длинее 255 символов' },
+                                { min: 2, message: 'Имя автора не должна быть короче 2 символов' }
                             ]}
                         >
-                            <Input placeholder="Введите имя автора"/>
+                            <Input placeholder="Введите имя автора" />
                         </Form.Item>
                         <Form.Item
                             name="info"
                             label="Информация"
                         >
-                            <Input placeholder="Введите информацию про автора"/>
+                            <Input placeholder="Введите информацию про автора" />
                         </Form.Item>
                         <Form.Item
                             name="bookIds"

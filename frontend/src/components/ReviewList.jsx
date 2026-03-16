@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import {Table, Button, Space, Modal, Form, Input, message, Spin, InputNumber} from 'antd';
+import { Table, Button, Space, Modal, Form, Input, message, Spin, InputNumber, Tooltip } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import axios from 'axios';
-import {useParams} from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 const { Column } = Table;
 
@@ -10,12 +10,12 @@ const ReviewList = () => {
     const { bookId } = useParams();
     const[reviews, setReviews] = useState([]);
     const [books, setBooks] = useState([]);
-    const [users, setUsers] = useState([]);
+    const[users, setUsers] = useState([]);
     const [currentUser, setCurrentUser] = useState(null);
     const[isModalVisible, setIsModalVisible] = useState(false);
     const [editingReview, setEditingReview] = useState(null);
     const [form] = Form.useForm();
-    const [loading, setLoading] = useState(false);
+    const[loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
@@ -163,7 +163,7 @@ const ReviewList = () => {
             <div className="container">
                 <div className="actions">
                     <Button type="primary"
-                            icon={<PlusOutlined/>}
+                            icon={<PlusOutlined />}
                             onClick={() => showModal()}
                             className="add-button">
                         Оставить отзыв
@@ -183,17 +183,21 @@ const ReviewList = () => {
                         key="action"
                         render={(_, review) => canEdit(review) ? (
                             <Space size="middle">
-                                <Button
-                                    type="link"
-                                    icon={<EditOutlined/>}
-                                    onClick={() => showModal(review)}
-                                />
-                                <Button
-                                    type="link"
-                                    icon={<DeleteOutlined/>}
-                                    onClick={() => handleDelete(review.id)}
-                                    danger
-                                />
+                                <Tooltip title="Редактировать отзыв">
+                                    <Button
+                                        type="link"
+                                        icon={<EditOutlined />}
+                                        onClick={() => showModal(review)}
+                                    />
+                                </Tooltip>
+                                <Tooltip title="Удалить отзыв">
+                                    <Button
+                                        type="link"
+                                        icon={<DeleteOutlined />}
+                                        onClick={() => handleDelete(review.id)}
+                                        danger
+                                    />
+                                </Tooltip>
                             </Space>
                         ) : null}
                     />
@@ -214,16 +218,16 @@ const ReviewList = () => {
                             name="rating"
                             label="Оценка(1-5)"
                             rules={[
-                                {required: true, message: 'Введите оценку!'},
+                                { required: true, message: 'Введите оценку!' },
                             ]}
                         >
-                            <InputNumber placeholder="Введите оценку" style={{ width: '100%' }} min={1} max={5} precision={0}/>
+                            <InputNumber placeholder="Введите оценку" style={{ width: '100%' }} min={1} max={5} precision={0} />
                         </Form.Item>
                         <Form.Item
                             name="comment"
                             label="Комментарий"
                         >
-                            <Input placeholder="Введите комментарий"/>
+                            <Input placeholder="Введите комментарий" />
                         </Form.Item>
                     </Form>
                 </Modal>

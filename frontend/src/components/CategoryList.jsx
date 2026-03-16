@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import {Table, Button, Space, Modal, Form, Input, message, Spin} from 'antd';
+import { Table, Button, Space, Modal, Form, Input, message, Spin, Tooltip } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import axios from 'axios';
 
 const { Column } = Table;
 
 const CategoryList = () => {
-    const [categories, setCategories] = useState([]);
+    const[categories, setCategories] = useState([]);
     const [books, setBooks] = useState([]);
-    const [isModalVisible, setIsModalVisible] = useState(false);
+    const[isModalVisible, setIsModalVisible] = useState(false);
     const [editingCategory, setEditingCategory] = useState(null);
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
-    const[submitting, setSubmitting] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
 
     const currentUser = JSON.parse(localStorage.getItem('user'));
     const isAdmin = currentUser?.role === 'ADMIN';
@@ -133,7 +133,7 @@ const CategoryList = () => {
                 {isAdmin && (
                     <div className="actions">
                         <Button type="primary"
-                                icon={<PlusOutlined/>}
+                                icon={<PlusOutlined />}
                                 onClick={() => showModal()}
                                 className="add-button">
                             Добавить жанр
@@ -142,25 +142,29 @@ const CategoryList = () => {
                 )}
 
                 <Table dataSource={categories} rowKey="id">
-                    <Column title="Название" dataIndex="name" key="name"/>
-                    <Column title="Кол-во книг" dataIndex="count" key="count"/>
+                    <Column title="Название" dataIndex="name" key="name" />
+                    <Column title="Кол-во книг" dataIndex="count" key="count" />
                     {isAdmin && (
                         <Column
                             title="Действия"
                             key="action"
                             render={(_, category) => (
                                 <Space size="middle">
-                                    <Button
-                                        type="link"
-                                        icon={<EditOutlined/>}
-                                        onClick={() => showModal(category)}
-                                    />
-                                    <Button
-                                        type="link"
-                                        icon={<DeleteOutlined/>}
-                                        onClick={() => handleDelete(category.id)}
-                                        danger
-                                    />
+                                    <Tooltip title="Редактировать жанр">
+                                        <Button
+                                            type="link"
+                                            icon={<EditOutlined />}
+                                            onClick={() => showModal(category)}
+                                        />
+                                    </Tooltip>
+                                    <Tooltip title="Удалить жанр">
+                                        <Button
+                                            type="link"
+                                            icon={<DeleteOutlined />}
+                                            onClick={() => handleDelete(category.id)}
+                                            danger
+                                        />
+                                    </Tooltip>
                                 </Space>
                             )}
                         />
@@ -183,10 +187,10 @@ const CategoryList = () => {
                             label="Название"
                             rules={[
                                 { required: true, message: 'Введите название жанра' },
-                                { max: 100, message: 'Название жанра не должно превышать 100 символов'}
+                                { max: 100, message: 'Название жанра не должно превышать 100 символов' }
                             ]}
                         >
-                            <Input placeholder="Введите название жанра"/>
+                            <Input placeholder="Введите название жанра" />
                         </Form.Item>
                     </Form>
                 </Modal>

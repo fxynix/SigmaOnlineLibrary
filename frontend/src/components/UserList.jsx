@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import {Table, Button, Space, Modal, Form, Input, message, Spin, Select} from 'antd';
-import {EditOutlined, DeleteOutlined, UserOutlined, MailOutlined, LockOutlined} from '@ant-design/icons';
+import { Table, Button, Space, Modal, Form, Input, message, Spin, Select, Tooltip } from 'antd';
+import { EditOutlined, DeleteOutlined, UserOutlined, MailOutlined, LockOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import Column from "antd/es/table/Column";
 
@@ -72,7 +72,7 @@ const UserList = ({ currentUser, onUserUpdate }) => {
 
                 message.error({
                     content: (
-                        <div style={{whiteSpace: 'pre-line'}}>
+                        <div style={{ whiteSpace: 'pre-line' }}>
                             {errorMessages}
                         </div>
                     ),
@@ -81,7 +81,7 @@ const UserList = ({ currentUser, onUserUpdate }) => {
             } else if (error.response?.status === 409) {
                 message.error({
                     content: error.response.data,
-                    duration:5,
+                    duration: 5,
                 });
             } else {
                 message.error('Не удалось сохранить пользователя');
@@ -128,8 +128,8 @@ const UserList = ({ currentUser, onUserUpdate }) => {
             <div className="container">
 
                 <Table dataSource={users} rowKey="id">
-                    <Column title="Имя пользователя" dataIndex="name" key="name"/>
-                    <Column title="Email" dataIndex="email" key="email"/>
+                    <Column title="Имя пользователя" dataIndex="name" key="name" />
+                    <Column title="Email" dataIndex="email" key="email" />
                     <Column
                         title="Роль"
                         dataIndex="role"
@@ -156,18 +156,22 @@ const UserList = ({ currentUser, onUserUpdate }) => {
                             key="action"
                             render={(_, user) => (
                                 <Space size="middle">
-                                    <Button
-                                        type="link"
-                                        icon={<EditOutlined/>}
-                                        onClick={() => showModal(user)}
-                                    />
-                                    <Button
-                                        type="link"
-                                        icon={<DeleteOutlined/>}
-                                        onClick={() => handleDelete(user.id)}
-                                        danger
-                                        disabled={currentUser?.id === user.id}
-                                    />
+                                    <Tooltip title="Редактировать пользователя">
+                                        <Button
+                                            type="link"
+                                            icon={<EditOutlined />}
+                                            onClick={() => showModal(user)}
+                                        />
+                                    </Tooltip>
+                                    <Tooltip title="Удалить пользователя">
+                                        <Button
+                                            type="link"
+                                            icon={<DeleteOutlined />}
+                                            onClick={() => handleDelete(user.id)}
+                                            danger
+                                            disabled={currentUser?.id === user.id}
+                                        />
+                                    </Tooltip>
                                 </Space>
                             )}
                         />
@@ -187,29 +191,29 @@ const UserList = ({ currentUser, onUserUpdate }) => {
                             name="name"
                             label="Имя пользователя"
                             rules={[
-                                {required: true, message: 'Введите имя пользователя'},
-                                {max: 100, message: 'Имя пользователя должен быть короче 101 символа'}
+                                { required: true, message: 'Введите имя пользователя' },
+                                { max: 100, message: 'Имя пользователя должен быть короче 101 символа' }
                             ]}
 
                         >
-                            <Input prefix={<UserOutlined/>} placeholder="Введите имя пользователя"/>
+                            <Input prefix={<UserOutlined />} placeholder="Введите имя пользователя" />
                         </Form.Item>
                         <Form.Item
                             name="email"
                             label="Email"
-                            rules={[{required: true, type: 'email', message: 'Введите корректный email'}]}
+                            rules={[{ required: true, type: 'email', message: 'Введите корректный email' }]}
                         >
-                            <Input prefix={<MailOutlined/>} placeholder="Введите email"/>
+                            <Input prefix={<MailOutlined />} placeholder="Введите email" />
                         </Form.Item>
                         <Form.Item
                             name="password"
                             label="Пароль"
                             rules={[
-                                {min: 8, message: 'Пароль должен быть не короче 8 символов'},
+                                { min: 8, message: 'Пароль должен быть не короче 8 символов' },
                             ]}
                         >
-                            <Input.Password prefix={<LockOutlined/>}
-                                            placeholder="Чтобы оставить текущий пароль, оставьте поле пустым"/>
+                            <Input.Password prefix={<LockOutlined />}
+                                            placeholder="Чтобы оставить текущий пароль, оставьте поле пустым" />
                         </Form.Item>
                     </Form>
                 </Modal>
